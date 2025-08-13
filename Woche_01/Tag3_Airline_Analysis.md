@@ -1,22 +1,19 @@
-```markdown
-# 📅 Tag 3 – Airline Analysis mit Linear Regression & SARIMA
+# 📅 Tag 3 – Airline Analysis (Linear Regression & SARIMA)
 
-Heute kombinieren wir Statistik mit Machine Learning und Zeitreihenanalyse.  
-Wir analysieren die berühmten **Airline Passenger Daten** (1958–1960) und erstellen Vorhersagen für 1961 –  
-einmal **ohne Saisonalität** (Linear Regression) und einmal **mit Saisonalität** (SARIMA).
+## 1️⃣ Begriffe
+| Begriff | Bedeutung |
+|---------|-----------|
+| **Zeitreihe (Time Series)** | Datenpunkte, die in zeitlicher Reihenfolge gesammelt werden |
+| **Trend** | Langfristige Aufwärts- oder Abwärtsbewegung der Daten |
+| **Saisonalität** | Wiederholende Muster innerhalb eines festen Zeitraums |
+| **Linear Regression** | Einfaches Modell zur Vorhersage durch eine Gerade |
+| **SARIMA** | Zeitreihenmodell, das Trend + Saisonalität kombiniert |
+| **Forecast** | Vorhersage zukünftiger Werte basierend auf historischen Daten |
+| **Konfidenzintervall** | Bereich, in dem der wahre Wert mit einer bestimmten Wahrscheinlichkeit liegt |
 
 ---
 
-## 1️⃣ Datenquelle & Vorbereitung
-
-Wir nutzen eine öffentliche CSV-Datei:  
-```
-
-[https://people.sc.fsu.edu/\~jburkardt/data/csv/airtravel.csv](https://people.sc.fsu.edu/~jburkardt/data/csv/airtravel.csv)
-
-````
-
-### Laden & Bereinigen
+## 2️⃣ Daten laden & bereinigen
 ```python
 import pandas as pd
 
@@ -27,20 +24,12 @@ df = pd.read_csv(url)
 df.columns = df.columns.str.strip().str.replace('"', '')
 
 print(df.head())
-````
-
-**Ergebnis:** Tabelle mit `Month`, `1958`, `1959`, `1960` und Passagierzahlen.
+```
+📌 **Ergebnis:** Tabelle mit Monaten und Passagierzahlen für 1958, 1959 und 1960.
 
 ---
 
-## 2️⃣ Linear Regression – Einfaches Trendmodell
-
-### Idee
-
-* Wir setzen alle Monate als **X-Werte** (0–35)
-* Passagierzahlen sind **y-Werte**
-* Das Modell sucht eine **Gerade** `y = m*x + b`, die den Trend beschreibt.
-
+## 3️⃣ Linear Regression – Trendmodell ohne Saisonalität
 ```python
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -56,8 +45,7 @@ future_X = np.arange(len(all_years), len(all_years) + 12).reshape(-1, 1)
 predictions_1961 = lr_model.predict(future_X)
 ```
 
-### Plot
-
+**Plot:**
 ```python
 import matplotlib.pyplot as plt
 
@@ -73,45 +61,34 @@ plt.legend()
 plt.grid(True)
 plt.show()
 ```
+📌 **Vorteil:** Einfaches Modell, erkennt Trend  
+📌 **Nachteil:** Ignoriert saisonale Schwankungen
 
 ---
 
-## 3️⃣ SARIMA – Saisonalität berücksichtigen
-
-### Warum SARIMA?
-
-* Linear Regression erkennt **keine saisonalen Wellen**
-* SARIMA modelliert **Trend + Saisonalität** gleichzeitig
-* Perfekt für Zeitreihen mit regelmäßigen Mustern (Flüge, Verkäufe, Energieverbrauch)
-
-### Daten in Zeitreihe umwandeln
-
-```python
-df_long = pd.melt(df, id_vars=["Month"], value_vars=['1958', '1959', '1960'],
-                  var_name="Year", value_name="Passengers")
-
-df_long['Date'] = pd.to_datetime(df_long['Month'] + " " + df_long['Year'])
-df_long = df_long.sort_values("Date")
-df_long.set_index('Date', inplace=True)
-
-ts = df_long['Passengers']
-```
-
-### SARIMA-Modell
-
+## 4️⃣ SARIMA – Modell mit Saisonalität
 ```python
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 
+# Daten in lange Form bringen
+df_long = pd.melt(df, id_vars=["Month"], value_vars=['1958', '1959', '1960'],
+                  var_name="Year", value_name="Passengers")
+df_long['Date'] = pd.to_datetime(df_long['Month'] + " " + df_long['Year'])
+df_long = df_long.sort_values("Date").set_index('Date')
+
+ts = df_long['Passengers']
+
+# SARIMA-Modell erstellen
 sarima_model = SARIMAX(ts, order=(1,1,1), seasonal_order=(1,1,1,12))
 sarima_results = sarima_model.fit(disp=False)
 
+# Prognose für 1961
 sarima_forecast = sarima_results.get_forecast(steps=12)
 sarima_pred = sarima_forecast.predicted_mean
 sarima_conf = sarima_forecast.conf_int()
 ```
 
-### Plot
-
+**Plot:**
 ```python
 plt.figure(figsize=(10,6))
 plt.plot(ts, label="Historische Daten")
@@ -126,31 +103,24 @@ plt.legend()
 plt.grid(True)
 plt.show()
 ```
+📌 **Vorteil:** Modelliert Trend **und** wiederkehrende Muster  
+📌 **Nachteil:** Komplexer als einfache Regression
 
 ---
 
-## 4️⃣ Ergebnisvergleich
-
-| Modell            | Trend | Saisonalität | Genauigkeit bei Wellen |
-| ----------------- | ----- | ------------ | ---------------------- |
-| Linear Regression | ✅     | ❌            | Niedrig                |
-| SARIMA            | ✅     | ✅            | Hoch                   |
-
----
-
-## 5️⃣ AI-Teil: Warum das wichtig ist
-
-* **MINT-Berufe** brauchen oft **Prognosen** (Produktion, Nachfrage, Energie)
-* Reine Trendmodelle (LR) sind zu simpel für komplexe Muster
-* Zeitreihenmodelle wie **SARIMA** oder **Prophet** sind industrieweit Standard
-* Dein Wissen hier ist **direkt beruflich nutzbar**
+## 5️⃣ Ergebnisvergleich
+| Modell               | Trend | Saisonalität | Genauigkeit bei Wellen |
+|----------------------|-------|--------------|------------------------|
+| Linear Regression    | ✅    | ❌           | Niedrig                 |
+| SARIMA               | ✅    | ✅           | Hoch                    |
 
 ---
 
-✍ **Zusammenfassung:**
-Heute hast du gelernt, wie man **Machine Learning** und **klassische Statistik** kombiniert:
+## 6️⃣ Physik- & AI-Bezug
+- **Physik:** Vorhersage von Messwerten (z. B. Temperatur, Energieverbrauch)  
+- **AI:** Zeitreihenmodelle werden in **Predictive Maintenance**, **Finanzprognosen** und **Supply Chain Optimierung** eingesetzt
 
-1. **Daten laden & bereinigen**
-2. **Trend erkennen (LR)**
-3. **Saisonalität modellieren (SARIMA)**
-4. **Vorhersagen realistisch machen**
+---
+
+💡 **Merksatz des Tages:**
+> „Wer Saisonalität ignoriert, sieht nur die halbe Wahrheit der Daten.“
