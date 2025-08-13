@@ -1,8 +1,3 @@
-Perfekt 👍
-Hier ist deine fertige **`Tag3_Airline_Analysis.md`** mit allen Erklärungen, Code und Kontext, sodass du sie direkt ins GitHub-Repo legen kannst.
-
----
-
 ```markdown
 # 📅 Tag 3 – Airline Analysis mit Linear Regression & SARIMA
 
@@ -159,13 +154,3 @@ Heute hast du gelernt, wie man **Machine Learning** und **klassische Statistik**
 2. **Trend erkennen (LR)**
 3. **Saisonalität modellieren (SARIMA)**
 4. **Vorhersagen realistisch machen**
-
-Nächster Schritt: Prophet-Modell testen und vergleichen.
-
-```
-
----
-
-Willst du, dass ich dir gleich noch die passende **Git-Commit-Message** schreibe,  
-damit du das sauber ins Repo pushen kannst?
-```
